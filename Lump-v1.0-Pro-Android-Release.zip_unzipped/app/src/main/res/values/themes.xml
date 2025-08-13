@@ -1,0 +1,10 @@
+
+<resources>
+    <style name="Theme.Lump" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/neon_teal</item>
+        <item name="android:windowBackground">@color/neon_bg</item>
+        <item name="android:navigationBarColor">@color/neon_bg</item>
+        <item name="android:statusBarColor">@color/neon_bg</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+</resources>
