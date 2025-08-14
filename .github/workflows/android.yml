@@ -20,17 +20,19 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@v3
       - name: Install Gradle & wrapper
+        working-directory: Lump-v1.0-Pro-Android-Release.zip_unzipped
         run: |
           curl -s "https://get.sdkman.io" | bash
           source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk install gradle 8.7
           ./gradlew wrapper --gradle-version 8.7
       - name: Build Debug APK
+        working-directory: Lump-v1.0-Pro-Android-Release.zip_unzipped
         run: ./gradlew assembleDebug
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: Lump-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: Lump-v1.0-Pro-Android-Release.zip_unzipped/app/build/outputs/apk/debug/*.apk
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -45,17 +47,19 @@ jobs:
 
       - name: Restore keystore from secret
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > lump.keystore
+          echo "$KEYSTORE_BASE64" | base64 -d > Lump-v1.0-Pro-Android-Release.zip_unzipped/app/lump.keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Install Gradle & wrapper
+        working-directory: Lump-v1.0-Pro-Android-Release.zip_unzipped
         run: |
           curl -s "https://get.sdkman.io" | bash
           source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk install gradle 8.7
           ./gradlew wrapper --gradle-version 8.7
 
       - name: Build signed Release
+        working-directory: Lump-v1.0-Pro-Android-Release.zip_unzipped
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -66,9 +70,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Lump-release-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: Lump-v1.0-Pro-Android-Release.zip_unzipped/app/build/outputs/apk/release/*.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/*.apk
+          files: Lump-v1.0-Pro-Android-Release.zip_unzipped/app/build/outputs/apk/release/*.apk
