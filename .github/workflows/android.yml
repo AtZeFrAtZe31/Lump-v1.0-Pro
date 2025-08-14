@@ -19,12 +19,27 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - name: Install Gradle & wrapper
+      - name: Accept Android SDK licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.7
+      - name: Cache Android SDK
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.android/sdk
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-android-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-android-
+      - name: Generate Gradle Wrapper
         working-directory: Lump-v1.0-Pro-Android-Release.zip_unzipped
         run: |
-          curl -s "https://get.sdkman.io" | bash
-          source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk install gradle 8.7
-          ./gradlew wrapper --gradle-version 8.7
+          gradle wrapper --gradle-version 8.7
+          chmod +x gradlew
       - name: Build Debug APK
         working-directory: Lump-v1.0-Pro-Android-Release.zip_unzipped
         run: ./gradlew assembleDebug
@@ -44,19 +59,40 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
+      - name: Accept Android SDK licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Restore keystore from secret
         run: |
+          mkdir -p Lump-v1.0-Pro-Android-Release.zip_unzipped/app
           echo "$KEYSTORE_BASE64" | base64 -d > Lump-v1.0-Pro-Android-Release.zip_unzipped/app/lump.keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
-      - name: Install Gradle & wrapper
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.7
+      - name: Cache Android SDK
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.android/sdk
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-android-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-android-
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.7
+      - name: Generate Gradle Wrapper
         working-directory: Lump-v1.0-Pro-Android-Release.zip_unzipped
         run: |
-          curl -s "https://get.sdkman.io" | bash
-          source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk install gradle 8.7
-          ./gradlew wrapper --gradle-version 8.7
+          gradle wrapper --gradle-version 8.7
+          chmod +x gradlew
 
       - name: Build signed Release
         working-directory: Lump-v1.0-Pro-Android-Release.zip_unzipped
