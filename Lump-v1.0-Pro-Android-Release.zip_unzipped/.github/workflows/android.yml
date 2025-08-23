@@ -1,106 +1,111 @@
-
-name: Android CI (Debug + Release)
+name: Android CI (Debug + Release, with Wrapper)
 
 on:
   push:
     branches: [ "main" ]
-    tags:
-      - 'v*'
   pull_request:
     branches: [ "main" ]
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
+
+env:
+  PROJECT_DIR: 'Lump-v1.0-Pro-Android-Release.zip_unzipped'
 
 jobs:
   debug:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
       - name: Accept Android SDK licenses
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          gradle-version: 8.7
-      - name: Cache Android SDK
+      - name: Cache Gradle
         uses: actions/cache@v3
         with:
           path: |
-            ~/.android/sdk
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-android-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-android-
-      - name: Generate Gradle Wrapper
-        run: |
-          gradle wrapper --gradle-version 8.7
-          chmod +x gradlew
+            ${{ runner.os }}-gradle-
+      - name: Generate Gradle wrapper (8.9)
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.9
+          build-root-directory: ${{ env.PROJECT_DIR }}
+          arguments: wrapper --gradle-version 8.9
+      - name: Make gradlew executable
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: chmod +x ./gradlew
       - name: Build Debug APK
+        working-directory: ${{ env.PROJECT_DIR }}
         run: ./gradlew assembleDebug
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: Lump-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/*.apk
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
       - name: Accept Android SDK licenses
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
       - name: Restore keystore from secret
-        run: |
-          mkdir -p app
-          echo "$KEYSTORE_BASE64" | base64 -d > app/lump.keystore
+        working-directory: ${{ env.PROJECT_DIR }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          gradle-version: 8.7
-      - name: Cache Android SDK
+        run: echo "$KEYSTORE_BASE64" | base64 -d > lump.keystore
+      - name: Cache Gradle
         uses: actions/cache@v3
         with:
           path: |
-            ~/.android/sdk
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-android-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-android-
-      - name: Generate Gradle Wrapper
-        run: |
-          gradle wrapper --gradle-version 8.7
-          chmod +x gradlew
-
+            ${{ runner.os }}-gradle-
+      - name: Generate Gradle wrapper (8.9)
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.9
+          build-root-directory: ${{ env.PROJECT_DIR }}
+          arguments: wrapper --gradle-version 8.9
+      - name: Make gradlew executable
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: chmod +x ./gradlew
       - name: Build signed Release
+        working-directory: ${{ env.PROJECT_DIR }}
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: ./gradlew assembleRelease
-
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: Lump-release-apk
-          path: app/build/outputs/apk/release/*.apk
-
+          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/release/*.apk
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/*.apk
+          files: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/release/*.apk
