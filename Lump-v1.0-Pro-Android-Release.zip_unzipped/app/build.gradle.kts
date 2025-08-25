@@ -23,7 +23,7 @@ android {
 
     signingConfigs {
         create("release") {
-            val storeFilePath = project.layout.projectDirectory.file("lump.keystore").asFile.absolutePath
+            val storeFilePath = project.layout.projectDirectory.file("release.keystore").asFile.absolutePath
             storeFile = file(storeFilePath)
             storePassword = System.getenv("STORE_PASSWORD") ?: ""
             keyAlias = System.getenv("KEY_ALIAS") ?: ""
