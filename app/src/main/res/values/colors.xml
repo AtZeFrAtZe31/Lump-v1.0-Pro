@@ -1,0 +1,10 @@
+
+<resources>
+    <color name="neon_bg">#0B1420</color>
+    <color name="neon_card">#0F1E2E</color>
+    <color name="neon_teal">#00E5FF</color>
+    <color name="neon_green">#1DE9B6</color>
+    <color name="neon_red">#FF5252</color>
+    <color name="text_primary">#E6F1FF</color>
+    <color name="text_secondary">#9BB4D1</color>
+</resources>
