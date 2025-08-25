@@ -20,7 +20,7 @@ class DashboardFragment : Fragment() {
     private var job: Job? = null
 
     private val lineEntries = ArrayList<Entry>()
-    private lateinit avar lineDataSet: LineDataSet
+    private lateinit var lineDataSet: LineDataSet
     private val candleEntries = ArrayList<CandleEntry>()
     private lateinit var candleDataSet: CandleDataSet
 
