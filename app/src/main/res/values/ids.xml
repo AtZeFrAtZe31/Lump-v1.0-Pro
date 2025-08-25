@@ -1,0 +1,6 @@
+
+<resources>
+    <item name="nav_dashboard" type="id"/>
+    <item name="nav_trade" type="id"/>
+    <item name="nav_chat" type="id"/>
+</resources>
